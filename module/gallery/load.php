@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__index__load extends Module {
+class M_gallery__gallery__load extends Module {
 
 	protected $inputs = array(
 		'directory' => '.',
@@ -37,6 +37,8 @@ class M_gallery__index__load extends Module {
 	);
 
 	protected $outputs = array(
+		'title' => true,
+		'info' => true,
 		'list' => true,
 		'done' => true,
 	);
@@ -44,35 +46,58 @@ class M_gallery__index__load extends Module {
 
 	public function main()
 	{
-		$directory = $this->in('directory').'/';
+		$directory = trim($this->in('directory'), '/').'/';
 		$path_prefix = $this->in('path_prefix');
 		$url_prefix  = $this->in('url_prefix');
 		$list = array();
 
 		$directory = preg_replace('/\.\+\//', '', $directory);
 
-		if (($d = opendir($path_prefix.$directory))) {
+		$gallery_info = self::get_gallery_info($path_prefix.$directory);
+
+		if ($gallery_info !== false && ($d = opendir($path_prefix.$directory))) {
 			while (($file = readdir($d)) !== false) {
 				if ($directory == './') {
 					$full_name = $file;
 				} else {
 					$full_name = $directory.$file;
 				}
-				if ($file[0] != '.' && is_dir($path_prefix.$full_name)) {
-					$info = M_gallery__gallery__load::get_gallery_info($path_prefix.$full_name);
-					if ($info !== false) {
-						$list[$file] = array_merge($info, array(
-								'url' => $url_prefix.$full_name,
-							));
-					}
+				if ($file[0] != '.') {
+					$list[$file] = array(
+						'filename' => $file,
+						'type' => is_dir($full_name) ? 'dir' : 'file',
+						'path' => $path_prefix.$full_name,
+						'url' => $url_prefix.$full_name,
+					);
 				}
 			}
 
 			closedir($d);
 			uksort($list, 'strcoll');
 
-			$this->out('done', true);
+			$this->out('title', $gallery_info['title']);
+			$this->out('info', $gallery_info);
 			$this->out('list', $list);
+			$this->out('done', true);
+		}
+	}
+
+
+	public static function get_gallery_info($dir)
+	{
+		$file = basename(rtrim($dir, '/'));
+		if (preg_match_all('/^([0-9-]+)( ?[0-9]\+)?[ -.]+(.+)$/', $file, $matches)) {
+			return array(
+				'filename' => $file,
+				'path' => $dir,
+				'date' => $matches[2][0] != '' 
+						? strftime('%Y-%m-%d %H:%M:%S', strtotime($matches[1][0]).' '.$matches[2][0])
+						: strftime('%Y-%m-%d', strtotime($matches[1][0])),
+				'title' => str_replace('_', ' ', $matches[3][0]),
+				'mtime' => strftime('%Y-%m-%d %H:%M:%S', filemtime($dir)),
+			);
+		} else {
+			return false;
 		}
 	}
 };

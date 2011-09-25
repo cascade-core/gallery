@@ -28,53 +28,19 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__index__load extends Module {
+function TPL_html5__gallery__gallery($t, $id, $d, $so)
+{
+	extract($d);
 
-	protected $inputs = array(
-		'directory' => '.',
-		'path_prefix' => './',
-		'url_prefix' => '/',
-	);
-
-	protected $outputs = array(
-		'list' => true,
-		'done' => true,
-	);
-
-
-	public function main()
-	{
-		$directory = $this->in('directory').'/';
-		$path_prefix = $this->in('path_prefix');
-		$url_prefix  = $this->in('url_prefix');
-		$list = array();
-
-		$directory = preg_replace('/\.\+\//', '', $directory);
-
-		if (($d = opendir($path_prefix.$directory))) {
-			while (($file = readdir($d)) !== false) {
-				if ($directory == './') {
-					$full_name = $file;
-				} else {
-					$full_name = $directory.$file;
-				}
-				if ($file[0] != '.' && is_dir($path_prefix.$full_name)) {
-					$info = M_gallery__gallery__load::get_gallery_info($path_prefix.$full_name);
-					if ($info !== false) {
-						$list[$file] = array_merge($info, array(
-								'url' => $url_prefix.$full_name,
-							));
-					}
-				}
-			}
-
-			closedir($d);
-			uksort($list, 'strcoll');
-
-			$this->out('done', true);
-			$this->out('list', $list);
-		}
+	echo "<div class=\"gallery_listing\">\n";
+	foreach ($list as $item) {
+		echo	"\t<a class=\"item\" href=\"", htmlspecialchars($item['url']), "\">\n",
+				"\t\t<img src=\"", htmlspecialchars($item['url']), "\" alt=\"[thumbnail]\">\n",
+				"\t\t<span>", htmlspecialchars($item['filename']), "</span>",
+			"</a>\n";
 	}
-};
+	echo "</div>\n";
+}
+
 
 

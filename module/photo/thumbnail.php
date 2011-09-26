@@ -59,7 +59,12 @@ class M_gallery__photo__thumbnail extends Module
 		if (!is_dir($cache_dir)) {
 			mkdir($cache_dir);
 		}
-		$cache_file = $cache_dir.'/'.md5($filename.'|'.$size);
+		$cache_fn = md5($filename.'|'.$size);
+		$cache_file = $cache_dir.'/'.substr($cache_fn, 0, 2);
+		if (!is_dir($cache_file)) {
+			mkdir($cache_file);
+		}
+		$cache_file .= '/'.$cache_fn;
 
 		// update cache if required
 		if (!is_readable($cache_file) || filemtime($filename) > filemtime($cache_file) || filemtime(__FILE__) > filemtime($cache_file)) {

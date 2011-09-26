@@ -28,19 +28,27 @@
  * SUCH DAMAGE.
  */
 
-function TPL_html5__gallery__gallery($t, $id, $d, $so)
+class M_gallery__photo__show extends Module
 {
-	extract($d);
 
-	echo "<div class=\"gallery_listing\">\n";
-	foreach ($list as $item) {
-		echo	"\t<a class=\"item\" href=\"", htmlspecialchars($item['url']), "\">\n",
-				"\t\t<span class=\"photo\"><img src=\"", htmlspecialchars($item['tb_url']), "\" alt=\"[thumbnail]\"></span>\n",
-				"\t\t<span class=\"name\">", htmlspecialchars($item['filename']), "</span>",
-			"</a>\n";
+	protected $inputs = array(
+		'image' => array(),
+		'slot' => 'default',
+		'slot-weight' => 50,
+	);
+
+	protected $outputs = array(
+	);
+
+	const force_exec = true;
+
+	public function main()
+	{
+		$image = $this->in('image');
+		$this->template_set_type('jpeg');
+		$this->template_add_to_slot(null, 'root', 1, 'gallery/image', array('image' => $image));
 	}
-	echo "</div>\n";
-}
 
+};
 
 

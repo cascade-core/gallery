@@ -34,12 +34,14 @@ class M_gallery__gallery__load extends Module {
 		'directory' => '.',
 		'path_prefix' => './',
 		'url_prefix' => '/',
+		'url_thumbnail_prefix' => '/thumbnail/',
 	);
 
 	protected $outputs = array(
 		'title' => true,
 		'info' => true,
 		'list' => true,
+		'others' => true,
 		'done' => true,
 	);
 
@@ -49,7 +51,10 @@ class M_gallery__gallery__load extends Module {
 		$directory = trim($this->in('directory'), '/').'/';
 		$path_prefix = $this->in('path_prefix');
 		$url_prefix  = $this->in('url_prefix');
+		$url_thumbnail_prefix  = $this->in('url_thumbnail_prefix');
+
 		$list = array();
+		$others = array();
 
 		$directory = preg_replace('/\.\+\//', '', $directory);
 
@@ -63,21 +68,30 @@ class M_gallery__gallery__load extends Module {
 					$full_name = $directory.$file;
 				}
 				if ($file[0] != '.') {
-					$list[$file] = array(
-						'filename' => $file,
-						'type' => is_dir($full_name) ? 'dir' : 'file',
-						'path' => $path_prefix.$full_name,
-						'url' => $url_prefix.$full_name,
-					);
+					if (preg_match('/\.jpe?g|\.png|\.gif|\.tiff/i', $file)) {
+						$list[$file] = array(
+							'filename' => $file,
+							'path' => $path_prefix.$full_name,
+							'url' => $url_prefix.$full_name,
+							'tb_url' => $url_thumbnail_prefix.$full_name,
+						);
+					} else {
+						$others[$file] = array(
+							'title' => $file,
+							'link' => $url_prefix.$full_name,
+						);
+					}
 				}
 			}
 
 			closedir($d);
 			uksort($list, 'strcoll');
+			uksort($others, 'strcoll');
 
 			$this->out('title', $gallery_info['title']);
 			$this->out('info', $gallery_info);
 			$this->out('list', $list);
+			$this->out('others', $others);
 			$this->out('done', true);
 		}
 	}

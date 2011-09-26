@@ -101,6 +101,45 @@ class M_gallery__photo__thumbnail extends Module
 		$image = imagecreatefromjpeg($filename);
 		imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
 
+		// Rotate if required
+		$exif = exif_read_data($filename);
+		$ort = @$exif['Orientation'];
+		switch($ort)
+		{
+			case 1: // nothing
+				break;
+
+			case 2: // horizontal flip
+				//$image->flipImage($public,1);			// FIXME
+				break;
+
+			case 3: // 180 rotate left
+				$image_p = imagerotate($image_p, 180, 0);
+				break;
+
+			case 4: // vertical flip
+				//$image->flipImage($public,2);			// FIXME
+				break;
+
+			case 5: // vertical flip + 90 rotate right
+				//$image->flipImage($public, 2);		// FIXME
+				$image_p = imagerotate($image_p, 270, 0);
+				break;
+
+			case 6: // 90 rotate right
+				$image_p = imagerotate($image_p, 270, 0);
+				break;
+
+			case 7: // horizontal flip + 90 rotate right
+				//$image->flipImage($public,1);    		// FIXME
+				$image_p = imagerotate($image_p, 270, 0);
+				break;
+
+			case 8: // 90 rotate left
+				$image_p = imagerotate($image_p, 90, 0);
+				break;
+		}
+
 		// Result
 		ob_start();
 		imagejpeg($image_p, null, 80);

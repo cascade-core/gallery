@@ -32,6 +32,7 @@ class M_gallery__gallery__load extends Module {
 
 	protected $inputs = array(
 		'directory' => '.',
+		'subdirectory' => null,
 		'path_prefix' => './',
 		'url_prefix' => '/',
 		'url_thumbnail_prefix' => '/thumbnail/',
@@ -60,6 +61,16 @@ class M_gallery__gallery__load extends Module {
 
 		$gallery_info = self::get_gallery_info($path_prefix.$directory);
 
+		$subdirectory = $this->in('subdirectory');
+		if (!empty($subdirectory)) {
+			if (is_array($subdirectory)) {
+				$subdirectory = join('/', $subdirectory);
+			} else {
+				$subdirectory = trim($subdirectory, '/');
+			}
+			$directory .= $subdirectory.'/';
+		}
+
 		if ($gallery_info !== false && ($d = opendir($path_prefix.$directory))) {
 			while (($file = readdir($d)) !== false) {
 				if ($directory == './') {
@@ -68,7 +79,7 @@ class M_gallery__gallery__load extends Module {
 					$full_name = $directory.$file;
 				}
 				if ($file[0] != '.') {
-					if (preg_match('/\.jpe?g|\.png|\.gif|\.tiff/i', $file)) {
+					if (preg_match('/(\.jpe?g|\.png|\.gif|\.tiff)$/i', $file)) {
 						$list[$file] = array(
 							'filename' => $file,
 							'path' => $path_prefix.$full_name,

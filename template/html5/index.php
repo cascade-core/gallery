@@ -32,6 +32,10 @@ function TPL_html5__gallery__index($t, $id, $d, $so)
 {
 	extract($d);
 
+	if (empty($list)) {
+		return;
+	}
+
 	echo "<table class=\"gallery_index table\">\n";
 	echo "<col><col width=\"100%\"><col>\n";
 	echo "\t<thead><tr>",
@@ -47,7 +51,7 @@ function TPL_html5__gallery__index($t, $id, $d, $so)
 			"<td class=\"mtime\" nowrap>", htmlspecialchars($item['mtime']), "</td>",
 			"</tr>\n";
 	}
-	echo "\t<tdata>\n";
+	echo "\t</tdata>\n";
 	echo "</table>\n";
 }
 

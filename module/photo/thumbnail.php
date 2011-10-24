@@ -91,7 +91,7 @@ class M_gallery__photo__thumbnail extends Module
 		if ($size_orig === false) {
 			return false;
 		}
-		list($width_orig, $height_orig) = $size_orig;
+		list($width_orig, $height_orig, $type) = $size_orig;
 
 		$ratio_orig = $width_orig / $height_orig;
 
@@ -101,9 +101,23 @@ class M_gallery__photo__thumbnail extends Module
 			$height = $width / $ratio_orig;
 		}
 
-		// Resample
+		// Load source image
+		$image = imagecreatefromstring(file_get_contents($filename));
+		if ($image === false) {
+			return false;
+		}
+
+		// Prepare thumbnail image
 		$image_p = imagecreatetruecolor($width, $height);
-		$image = imagecreatefromjpeg($filename);
+		if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF) {
+			$transparent_color = imagecolorallocatealpha($image_p, 32, 32, 32, 0);	// no transparency, use #888; FIXME: configurable background color
+			imagecolortransparent($image_p, $transparent_color);
+			imagefill($image_p, 0, 0, $transparent_color);
+			imagealphablending($image_p, true);
+			imagesavealpha($image_p, true);
+		}
+
+		// Resample
 		imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
 
 		// Rotate if required
@@ -147,7 +161,7 @@ class M_gallery__photo__thumbnail extends Module
 
 		// Result
 		ob_start();
-		imagejpeg($image_p, null, 80);
+		imagejpeg($image_p);
 		return ob_get_clean();
 	}
 

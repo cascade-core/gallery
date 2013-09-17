@@ -28,13 +28,13 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__photo__show extends Module
+class B_gallery__photo__show extends Block
 {
 
 	protected $inputs = array(
 		'image' => array(),
 		'slot' => 'default',
-		'slot-weight' => 50,
+		'slot_weight' => 50,
 	);
 
 	protected $outputs = array(
@@ -45,8 +45,8 @@ class M_gallery__photo__show extends Module
 	public function main()
 	{
 		$image = $this->in('image');
-		$this->template_set_type('jpeg');
-		$this->template_add_to_slot(null, 'root', 1, 'gallery/image', array('image' => $image));
+		$this->templateSetType('jpeg');
+		$this->templateAddToSlot(null, 'root', 1, 'gallery/image', array('image' => $image));
 	}
 
 };

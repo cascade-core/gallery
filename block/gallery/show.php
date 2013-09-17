@@ -28,16 +28,16 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__index__show extends M_core__out__output
+class B_gallery__gallery__show extends B_core__out__output
 {
 
 	protected $inputs = array(
 		'list' => array(),
 		'slot' => 'default',
-		'slot-weight' => 50,
+		'slot_weight' => 50,
 	);
 
-	protected $template = 'gallery/index';
+	protected $template = 'gallery/gallery';
 
 };
 

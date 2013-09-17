@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__photo__thumbnail extends Module
+class B_gallery__photo__thumbnail extends Block
 {
 
 	protected $inputs = array(

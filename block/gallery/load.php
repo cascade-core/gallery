@@ -28,7 +28,7 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__gallery__load extends Module {
+class B_gallery__gallery__load extends Block {
 
 	protected $inputs = array(
 		'directory' => '.',
@@ -59,7 +59,7 @@ class M_gallery__gallery__load extends Module {
 
 		$directory = preg_replace('/\.\+\//', '', $directory);
 
-		$gallery_info = self::get_gallery_info($path_prefix.$directory);
+		$gallery_info = self::getGalleryInfo($path_prefix.$directory);
 
 		$subdirectory = $this->in('subdirectory');
 		if (!empty($subdirectory)) {
@@ -108,7 +108,7 @@ class M_gallery__gallery__load extends Module {
 	}
 
 
-	public static function get_gallery_info($dir)
+	public static function getGalleryInfo($dir)
 	{
 		$file = basename(rtrim($dir, '/'));
 		if (preg_match_all('/^([0-9-]+)( ?[0-9]\+)?[ -.]+(.+)$/', $file, $matches)) {

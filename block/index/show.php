@@ -28,53 +28,17 @@
  * SUCH DAMAGE.
  */
 
-class M_gallery__index__load extends Module {
+class B_gallery__index__show extends B_core__out__output
+{
 
 	protected $inputs = array(
-		'directory' => '.',
-		'path_prefix' => './',
-		'url_prefix' => '/',
+		'list' => array(),
+		'slot' => 'default',
+		'slot_weight' => 50,
 	);
 
-	protected $outputs = array(
-		'list' => true,
-		'done' => true,
-	);
+	protected $template = 'gallery/index';
 
-
-	public function main()
-	{
-		$directory = $this->in('directory').'/';
-		$path_prefix = $this->in('path_prefix');
-		$url_prefix  = $this->in('url_prefix');
-		$list = array();
-
-		$directory = preg_replace('/\.\+\//', '', $directory);
-
-		if (($d = opendir($path_prefix.$directory))) {
-			while (($file = readdir($d)) !== false) {
-				if ($directory == './') {
-					$full_name = $file;
-				} else {
-					$full_name = $directory.$file;
-				}
-				if ($file[0] != '.' && is_dir($path_prefix.$full_name)) {
-					$info = M_gallery__gallery__load::get_gallery_info($path_prefix.$full_name);
-					if ($info !== false) {
-						$list[$file] = array_merge($info, array(
-								'url' => $url_prefix.$full_name,
-							));
-					}
-				}
-			}
-
-			closedir($d);
-			uksort($list, 'strcoll');
-
-			$this->out('done', true);
-			$this->out('list', $list);
-		}
-	}
 };
 
 

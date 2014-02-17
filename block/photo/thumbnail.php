@@ -21,9 +21,13 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 {
 
 	protected $inputs = array(
-		'path_prefix' => './',
 		'filename' => array(),
 		'size' => 120,
+		'gallery_config' => null,
+	);
+
+	protected $connections = array(
+		'gallery_config' => array('config', 'gallery'),
 	);
 
 	protected $outputs = array(
@@ -33,7 +37,8 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 
 	public function main()
 	{
-		$path_prefix = $this->in('path_prefix');
+		$gallery_config = $this->in('gallery_config');
+		$path_prefix = $gallery_config['path_prefix'];
 		$filename = $this->in('filename');
 		$size = $this->in('size');
 

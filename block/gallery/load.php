@@ -20,11 +20,13 @@
 class B_gallery__gallery__load extends \Cascade\Core\Block {
 
 	protected $inputs = array(
-		'directory' => '.',
-		'subdirectory' => null,
-		'path_prefix' => './',
-		'url_prefix' => '/',
-		'url_thumbnail_prefix' => '/thumbnail/',
+		'gallery' => null,
+		'path' => null,			// path within gallery
+		'gallery_config' => null,
+	);
+
+	protected $connections = array(
+		'gallery_config' => array('config', 'gallery'),
 	);
 
 	protected $outputs = array(
@@ -38,36 +40,36 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 
 	public function main()
 	{
-		$directory = trim($this->in('directory'), '/').'/';
-		$path_prefix = $this->in('path_prefix');
-		$url_prefix  = $this->in('url_prefix');
-		$url_thumbnail_prefix  = $this->in('url_thumbnail_prefix');
+		$directory = $this->in('gallery');
+		$gallery_config = $this->in('gallery_config');
+
+		$path_prefix = $gallery_config['path_prefix'];
+		$url_prefix  = $gallery_config['url_prefix'];
+		$url_thumbnail_prefix = $gallery_config['url_thumbnail_prefix'];
 
 		$list = array();
 		$others = array();
 
-		$directory = preg_replace('/\.\+\//', '', $directory);
+		$directory = str_replace('/', '_', $directory);
 
 		$gallery_info = self::getGalleryInfo($path_prefix.$directory);
 
-		$subdirectory = $this->in('subdirectory');
+		$subdirectory = $this->in('path');
 		if (!empty($subdirectory)) {
 			if (is_array($subdirectory)) {
 				$subdirectory = join('/', $subdirectory);
 			} else {
 				$subdirectory = trim($subdirectory, '/');
 			}
-			$directory .= $subdirectory.'/';
+			$directory .= '/'.$subdirectory.'/';
+		} else {
+			$directory .= '/';
 		}
 
 		if ($gallery_info !== false && ($d = opendir($path_prefix.$directory))) {
 			while (($file = readdir($d)) !== false) {
-				if ($directory == './') {
-					$full_name = $file;
-				} else {
-					$full_name = $directory.$file;
-				}
 				if ($file[0] != '.') {
+					$full_name = $directory.$file;
 					if (preg_match('/(\.jpe?g|\.png|\.gif|\.tiff)$/i', $file)) {
 						$list[$file] = array(
 							'filename' => $file,

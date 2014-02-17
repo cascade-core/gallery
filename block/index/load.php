@@ -20,9 +20,11 @@
 class B_gallery__index__load extends \Cascade\Core\Block {
 
 	protected $inputs = array(
-		'directory' => '.',
-		'path_prefix' => './',
-		'url_prefix' => '/',
+		'gallery_config' => null,
+	);
+
+	protected $connections = array(
+		'gallery_config' => array('config', 'gallery'),
 	);
 
 	protected $outputs = array(
@@ -33,14 +35,13 @@ class B_gallery__index__load extends \Cascade\Core\Block {
 
 	public function main()
 	{
-		$directory = $this->in('directory').'/';
-		$path_prefix = $this->in('path_prefix');
-		$url_prefix  = $this->in('url_prefix');
+		$gallery_config = $this->in('gallery_config');
+
+		$path_prefix = $gallery_config['path_prefix'];
+		$url_prefix  = $gallery_config['url_prefix'];
 		$list = array();
 
-		$directory = preg_replace('/\.\+\//', '', $directory);
-
-		if (($d = opendir($path_prefix.$directory))) {
+		if (($d = opendir($path_prefix))) {
 			while (($file = readdir($d)) !== false) {
 				if ($directory == './') {
 					$full_name = $file;

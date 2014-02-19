@@ -21,7 +21,7 @@ class B_gallery__photo__show extends \Cascade\Core\Block
 {
 
 	protected $inputs = array(
-		'image' => array(),
+		'image_file' => array(),
 		'slot' => 'default',
 		'slot_weight' => 50,
 	);
@@ -33,9 +33,9 @@ class B_gallery__photo__show extends \Cascade\Core\Block
 
 	public function main()
 	{
-		$image = $this->in('image');
+		$image_file = $this->in('image_file');
 		$this->templateSetType('jpeg');
-		$this->templateAddToSlot(null, 'root', 1, 'gallery/image', array('image' => $image));
+		$this->templateAddToSlot(null, 'root', 1, 'gallery/image', array('image_file' => $image_file));
 	}
 
 };

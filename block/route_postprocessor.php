@@ -55,6 +55,7 @@ class B_gallery__route_postprocessor extends \Cascade\Core\Block
 		}
 
 		$full_path = $base_dir.'/'.join('/', (array) $outputs['path_tail']);
+		$outputs['filename'] = $full_path;
 
 		// check extensions
 		if (!empty($group['extensions']) && ($path_tail = @ end($outputs['path_tail']))) {

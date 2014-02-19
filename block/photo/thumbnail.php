@@ -32,7 +32,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 	);
 
 	protected $outputs = array(
-		'thumbnail' => true,
+		'thumbnail_file' => true,
 		'done' => true,
 	);
 
@@ -52,7 +52,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 
 		// prepare cache file
-		$cache_dir = DIR_ROOT.'/var/cache';
+		$cache_dir = DIR_ROOT.'var/cache';
 		if (!is_dir($cache_dir)) {
 			mkdir($cache_dir);
 		}
@@ -67,13 +67,9 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		if (!is_readable($cache_file) || filemtime($filename) > filemtime($cache_file) || filemtime(__FILE__) > filemtime($cache_file)) {
 			$image = self::generate_thumbnail($filename, $size, $size);
 			file_put_contents($cache_file, $image);
-		} else {
-			// otherwise read image from cache
-			$image = file_get_contents($cache_file);
 		}
-		
-		if ($image !== false) {
-			$this->out('thumbnail', $image);
+		if ($cache_file !== false) {
+			$this->out('thumbnail_file', $cache_file);
 			$this->out('done', true);
 		}
 	}

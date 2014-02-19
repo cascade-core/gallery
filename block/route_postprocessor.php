@@ -39,7 +39,7 @@ class B_gallery__route_postprocessor extends \Cascade\Core\Block
 		$this->out('done', true);
 	}
 
-	public function routePostprocess($outputs)
+	public function routePostprocess($outputs, $group)
 	{
 		$gallery_config = $this->in('gallery_config');
 		$base_dir = $gallery_config['path_prefix'].str_replace('/', '_', $outputs['gallery']);
@@ -56,20 +56,28 @@ class B_gallery__route_postprocessor extends \Cascade\Core\Block
 
 		$full_path = $base_dir.'/'.join('/', (array) $outputs['path_tail']);
 
-		// check for gallery folders
-		if (is_dir($full_path)) {
-			return $outputs;
+		// check extensions
+		if (!empty($group['extensions']) && ($path_tail = @ end($outputs['path_tail']))) {
+			foreach ($group['extensions'] as $ext => $ext_outputs) {
+				$ext_len = strlen($ext);
+				if (substr_compare($path_tail, $ext, - $ext_len) === 0) {
+					$outputs = array_replace($outputs, $ext_outputs);
+					$outputs['extension'] = $ext;
+					$outputs['path_tail'][key($outputs['path_tail'])] = substr($path_tail, 0, - $ext_len);
+					return $outputs;
+				}
+			}
 		}
-
-		// check for file
-		if (is_file($full_path)) {
-			// FIXME
-			header('Content-type: image/'.preg_replace('/.*\./', '', $full_path));
-			readfile($full_path);
-			exit;
+		
+		// check file properties
+		if (!empty($group['file_checks'])) {
+			foreach ($group['file_checks'] as $check => $ext_outputs) {
+				if ($check($full_path)) {
+					$outputs = array_replace($outputs, $ext_outputs);
+					return $outputs;
+				}
+			}
 		}
-		debug_dump($full_path);
-		debug_dump($outputs, __METHOD__);
 
 		return $outputs;
 	}

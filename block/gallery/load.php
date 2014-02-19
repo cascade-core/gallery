@@ -45,7 +45,7 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 
 		$path_prefix = $gallery_config['path_prefix'];
 		$url_prefix  = $gallery_config['url_prefix'];
-		$url_thumbnail_prefix = $gallery_config['url_thumbnail_prefix'];
+		$url_thumbnail_ext = $gallery_config['url_thumbnail_ext'];
 
 		$list = array();
 		$others = array();
@@ -75,7 +75,7 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 							'filename' => $file,
 							'path' => $path_prefix.$full_name,
 							'url' => $url_prefix.$full_name,
-							'tb_url' => $url_thumbnail_prefix.$full_name,
+							'tb_url' => $url_prefix.$full_name.$url_thumbnail_ext,
 						);
 					} else {
 						$others[$file] = array(

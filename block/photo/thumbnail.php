@@ -21,7 +21,8 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 {
 
 	protected $inputs = array(
-		'filename' => array(),
+		'gallery' => null,
+		'path' => null,
 		'size' => 120,
 		'gallery_config' => null,
 	);
@@ -39,13 +40,15 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 	{
 		$gallery_config = $this->in('gallery_config');
 		$path_prefix = $gallery_config['path_prefix'];
-		$filename = $this->in('filename');
+		$gallery = $this->in('gallery');
+		$path = $this->in('path');
 		$size = $this->in('size');
 
-		if (is_array($filename)) {
-			$filename = $path_prefix.join($filename, '/');
+		$filename = $path_prefix.$gallery.'/';
+		if (is_array($path)) {
+			$filename .= join($path, '/');
 		} else {
-			$filename = $path_prefix.$filename;
+			$filename .= $path;
 		}
 
 		// prepare cache file

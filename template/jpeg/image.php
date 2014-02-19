@@ -22,6 +22,20 @@ function TPL_jpeg__gallery__image($t, $id, $d, $so)
 	extract($d);
 
 	header('Content-Type: image/jpeg');
-	echo $image;
+
+	if (isset($image)) {
+		echo $image;
+		return;
+	}
+	
+	if (isset($image_filename)) {
+		if (!file_exists($image_filename)) {
+			throw new \Exception('File not found: '.$image_filename);
+		}
+
+		// TODO: Resumable downloads, check mtime
+		header("X-Sendfile: ".($full_path[0] == '/' ? $full_path : getcwd().'/'.$full_path));
+	}
+
 }
 

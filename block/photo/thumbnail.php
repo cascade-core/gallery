@@ -56,7 +56,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		if (!is_dir($cache_dir)) {
 			mkdir($cache_dir);
 		}
-		$cache_fn = md5($filename.'|'.$size);
+		$cache_fn = md5($filename.'|'.$size.'|'.$gallery_config['resize_mode']);
 		$cache_file = $cache_dir.'/'.substr($cache_fn, 0, 2);
 		if (!is_dir($cache_file)) {
 			mkdir($cache_file);
@@ -65,7 +65,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 
 		// update cache if required
 		if (!is_readable($cache_file) || filemtime($filename) > filemtime($cache_file) || filemtime(__FILE__) > filemtime($cache_file)) {
-			$image = self::generate_thumbnail($filename, $size, $size);
+			$image = self::generate_thumbnail($filename, $size, $size, $gallery_config['resize_mode']);
 			file_put_contents($cache_file, $image);
 		}
 		if ($cache_file !== false) {
@@ -74,7 +74,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 	}
 
-	public static function generate_thumbnail($filename, $width, $height)
+	public static function generate_thumbnail($filename, $width, $height, $resize_mode)
 	{
 		// Content type
 		//header('Content-Type: image/jpeg');
@@ -84,15 +84,106 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		if ($size_orig === false) {
 			return false;
 		}
-		list($width_orig, $height_orig, $type) = $size_orig;
+		list($w_orig, $h_orig, $type) = $size_orig;
 
-		$ratio_orig = $width_orig / $height_orig;
+		$ratio_orig = $w_orig / $h_orig;
+		$ratio_dst  = $width / $height;
+		$x_src = 0;
+		$y_src = 0;
+		$w_src = $w_orig;
+		$h_src = $h_orig;
+		$w_dst = $width;
+		$h_dst = $height;
 
-		if ($width / $height > $ratio_orig) {
-			$width = $height * $ratio_orig;
-		} else {
-			$height = $width / $ratio_orig;
+		$exif = exif_read_data($filename);
+		$ort = @$exif['Orientation'];
+
+		// If rotate is required, swap w_dst and h_dst
+		switch($ort) {
+
+			// No rotation
+			case 0: // missing info
+			case 1: // nothing
+			case 2: // horizontal flip
+			case 3: // 180 rotate left
+			case 4: // vertical flip
+				switch ($resize_mode) {
+
+					default:
+					case 'fit':
+						if ($ratio_orig > $ratio_dst) {
+							// original is wider -- reduce height
+							$h_dst = $w_dst / $ratio_orig;
+						} else {
+							// original is taller -- reduce width
+							$w_dst = $h_dst * $ratio_orig;
+						}
+						break;
+
+					case 'fill':
+						if ($ratio_orig > $ratio_dst) {
+							// original is wider -- crop sides
+							$w_src = $h_src * $ratio_dst;
+							$x_src = ($w_orig - $w_src) / 2;
+						} else {
+							// original is taller -- crop top & bottom
+							$h_src = $w_src / $ratio_dst;
+							$y_src = ($h_orig - $h_src) / 2;
+						}
+						break;
+
+					case 'same_height':
+						// height is given -- calculate width
+						$w_dst = $h_dst * $ratio_orig;
+						break;
+				}
+				break;
+
+			// With rotation
+			case 5: // vertical flip + 90 rotate right
+			case 6: // 90 rotate right
+			case 7: // horizontal flip + 90 rotate right
+			case 8: // 90 rotate left
+				switch ($resize_mode) {
+
+					default:
+					case 'fit':
+						if ($ratio_orig > $ratio_dst) {
+							// original is wider -- reduce height
+							$h_dst = $w_dst;
+							$w_dst = $h_dst * $ratio_orig;
+						} else {
+							// original is taller -- reduce width
+							$w_dst = $h_dst;
+							$h_dst = $w_dst / $ratio_orig;
+						}
+						break;
+
+					case 'fill':
+						if ($ratio_orig > $ratio_dst) {
+							// original is wider -- crop sides
+							$w_src = $h_src;
+							$h_src = $w_src * $ratio_dst;
+							$x_src = ($w_orig - $w_src) / 2;
+						} else {
+							// original is taller -- crop top & bottom
+							$h_src = $w_src;
+							$w_src = $h_src / $ratio_dst;
+							$y_src = ($h_orig - $h_src) / 2;
+						}
+						$h_dst = $width;
+						$w_dst = $height;
+						break;
+
+					case 'same_height':
+						// height is given -- calculate width
+						$w_dst = $h_dst;
+						$h_dst = $w_dst / $ratio_orig;
+						break;
+				}
+				break;
 		}
+
 
 		// Load source image
 		$image = imagecreatefromstring(file_get_contents($filename));
@@ -101,7 +192,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 
 		// Prepare thumbnail image
-		$image_p = imagecreatetruecolor($width, $height);
+		$image_p = imagecreatetruecolor($w_dst, $h_dst);
 		if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF) {
 			$transparent_color = imagecolorallocatealpha($image_p, 32, 32, 32, 0);	// no transparency, use #888; FIXME: configurable background color
 			imagecolortransparent($image_p, $transparent_color);
@@ -111,11 +202,9 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 
 		// Resample
-		imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
+		imagecopyresampled($image_p, $image, 0, 0, $x_src, $y_src, $w_dst, $h_dst, $w_src, $h_src);
 
 		// Rotate if required
-		$exif = exif_read_data($filename);
-		$ort = @$exif['Orientation'];
 		switch($ort)
 		{
 			case 1: // nothing

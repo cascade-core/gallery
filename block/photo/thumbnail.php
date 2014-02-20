@@ -65,8 +65,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 
 		// update cache if required
 		if (!is_readable($cache_file) || filemtime($filename) > filemtime($cache_file) || filemtime(__FILE__) > filemtime($cache_file)) {
-			$image = self::generate_thumbnail($filename, $size, $size, $gallery_config['resize_mode']);
-			file_put_contents($cache_file, $image);
+			self::generate_thumbnail($cache_file, $filename, $size, $size, $gallery_config['resize_mode']);
 		}
 		if ($cache_file !== false) {
 			$this->out('thumbnail_file', $cache_file);
@@ -74,7 +73,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 	}
 
-	public static function generate_thumbnail($filename, $width, $height, $resize_mode)
+	public static function generate_thumbnail($target_file, $filename, $width, $height, $resize_mode)
 	{
 		// Content type
 		//header('Content-Type: image/jpeg');
@@ -242,9 +241,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 
 		// Result
-		ob_start();
-		imagejpeg($image_p);
-		return ob_get_clean();
+		return imagejpeg($image_p, $target_file, 92);
 	}
 
 };

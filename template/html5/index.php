@@ -32,7 +32,7 @@ function TPL_html5__gallery__index($t, $id, $d, $so)
 		"<th>", _('Title'), "</th>",
 		"<th>", _('Modified'), "</th>",
 		"</tr></thead>\n";
-	echo "\t<tdata>\n";
+	echo "\t<tbody>\n";
 	foreach ($list as $item) {
 		echo	"\t\t<tr>",
 			"<td class=\"date\" nowrap>", htmlspecialchars($item['date']), "</td>",
@@ -40,7 +40,7 @@ function TPL_html5__gallery__index($t, $id, $d, $so)
 			"<td class=\"mtime\" nowrap>", htmlspecialchars($item['mtime']), "</td>",
 			"</tr>\n";
 	}
-	echo "\t</tdata>\n";
+	echo "\t</tbody>\n";
 	echo "</table>\n";
 }
 

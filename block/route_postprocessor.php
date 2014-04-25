@@ -61,7 +61,7 @@ class B_gallery__route_postprocessor extends \Cascade\Core\Block
 		if (!empty($group['extensions']) && ($path_tail = @ end($outputs['path_tail']))) {
 			foreach ($group['extensions'] as $ext => $ext_outputs) {
 				$ext_len = strlen($ext);
-				if (substr_compare($path_tail, $ext, - $ext_len) === 0) {
+				if (substr_compare($path_tail, $ext, - $ext_len, $ext_len, false) === 0) {
 					$outputs = array_replace($outputs, $ext_outputs);
 					$outputs['extension'] = $ext;
 					$outputs['path_tail'][key($outputs['path_tail'])] = substr($path_tail, 0, - $ext_len);

@@ -28,8 +28,16 @@ function TPL_html5__gallery__gallery($t, $id, $d, $so)
 	echo "<div class=\"gallery_listing\">\n";
 	foreach ($list as $item) {
 		echo	"\t<a class=\"item\" href=\"", htmlspecialchars($item['url']), "\">\n",
-				"\t\t<span class=\"photo\"><img src=\"", htmlspecialchars($item['tb_url']), "\" alt=\"[thumbnail]\"></span>\n",
-				"\t\t<span class=\"name\">", htmlspecialchars($item['filename']), "</span>",
+			"\t\t<span class=\"photo\">",
+			"<img src=\"", htmlspecialchars($item['tb_url']), "\" alt=\"[thumbnail]\"";
+		if (isset($item['tb_width'])) {
+			echo " width=\"", (int) $item['tb_width'], "\"";
+		}
+		if (isset($item['tb_height'])) {
+			echo " height=\"", (int) $item['tb_height'], "\"";
+		}
+		echo "></span>\n",
+			"\t\t<span class=\"name\">", htmlspecialchars($item['filename']), "</span>",
 			"</a>\n";
 	}
 	echo "</div>\n";

@@ -23,7 +23,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 	protected $inputs = array(
 		'gallery' => null,
 		'path' => null,
-		'size' => 120,
+		'size' => 160,
 		'gallery_config' => null,
 	);
 
@@ -65,7 +65,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 
 		// update cache if required
 		if (!is_readable($cache_file) || filemtime($filename) > filemtime($cache_file) || filemtime(__FILE__) > filemtime($cache_file)) {
-			self::generate_thumbnail($cache_file, $filename, $size, $size, $gallery_config['resize_mode']);
+			self::generateThumbnail($cache_file, $filename, $size, $size, $gallery_config['resize_mode']);
 		}
 		if ($cache_file !== false) {
 			$this->out('thumbnail_file', $cache_file);
@@ -73,29 +73,29 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 	}
 
-	public static function generate_thumbnail($target_file, $filename, $width, $height, $resize_mode)
+
+	public static function calculateThumbnailSize($w_orig, $h_orig, $ort, $resize_mode, $w_dst, $h_dst)
 	{
-		// Content type
-		//header('Content-Type: image/jpeg');
+		list($w_dst, $h_dst, $w_src, $h_src, $x_src, $y_src, $needs_rotation, $needs_flip)
+			= self::calculateTransformParameters($w_orig, $h_orig, $ort, $resize_mode, $w_dst, $h_dst);
 
-		// Get new dimensions
-		$size_orig = getimagesize($filename);
-		if ($size_orig === false) {
-			return false;
+		if ($needs_rotation == 90 || $needs_rotation == 270) {
+			return array($h_dst, $w_dst);
+		} else {
+			return array($w_dst, $h_dst);
 		}
-		list($w_orig, $h_orig, $type) = $size_orig;
+	}
 
-		$ratio_orig = $w_orig / $h_orig;
-		$ratio_dst  = $width / $height;
+
+	private static function calculateTransformParameters($w_orig, $h_orig, $ort, $resize_mode, $w_dst, $h_dst)
+	{
+		//debug_dump(get_defined_vars());
 		$x_src = 0;
 		$y_src = 0;
 		$w_src = $w_orig;
 		$h_src = $h_orig;
-		$w_dst = $width;
-		$h_dst = $height;
-
-		$exif = exif_read_data($filename);
-		$ort = @$exif['Orientation'];
+		$ratio_orig = $w_orig / $h_orig;
+		$ratio_dst  = $w_dst / $h_dst;
 
 		// If rotate is required, swap w_dst and h_dst
 		switch($ort) {
@@ -170,8 +170,9 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 							$w_src = $h_src / $ratio_dst;
 							$y_src = ($h_orig - $h_src) / 2;
 						}
-						$h_dst = $width;
-						$w_dst = $height;
+						$x = $h_dst;
+						$h_dst = $w_dst;
+						$w_dst = $x;
 						break;
 
 					case 'same_height':
@@ -183,6 +184,72 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 				break;
 		}
 
+		// Rotation & flip
+		switch($ort)
+		{
+			default:
+			case 1: // nothing
+				$needs_rotation = 0;
+				$needs_flip     = null;
+				break;
+
+			case 2: // horizontal flip
+				$needs_rotation = 0;
+				$needs_flip     = 'h';
+				break;
+
+			case 3: // 180 rotate left
+				$needs_rotation = 180;
+				$needs_flip     = null;
+				break;
+
+			case 4: // vertical flip
+				$needs_rotation = 0;
+				$needs_flip     = 'v';
+				break;
+
+			case 5: // vertical flip + 90 rotate right
+				$needs_rotation = 270;
+				$needs_flip     = 'v';
+				break;
+
+			case 6: // 90 rotate right
+				$needs_rotation = 270;
+				$needs_flip     = null;
+				break;
+
+			case 7: // horizontal flip + 90 rotate right
+				$needs_rotation = 270;
+				$needs_flip     = 'h';
+				break;
+
+			case 8: // 90 rotate left
+				$needs_rotation = 90;
+				$needs_flip     = null;
+				break;
+		}
+
+		return array($w_dst, $h_dst, $w_src, $h_src, $x_src, $y_src, $needs_rotation, $needs_flip);
+	}
+
+
+	public static function generateThumbnail($target_file, $filename, $width, $height, $resize_mode)
+	{
+		// Content type
+		//header('Content-Type: image/jpeg');
+
+		// Get new dimensions
+		$size_orig = getimagesize($filename);
+		if ($size_orig === false) {
+			return false;
+		}
+		list($w_orig, $h_orig, $type) = $size_orig;
+
+		$exif = exif_read_data($filename);
+		$ort = @$exif['Orientation'];
+
+		list($w_dst, $h_dst, $w_src, $h_src, $x_src, $y_src, $needs_rotation, $needs_flip)
+			= self::calculateTransformParameters($w_orig, $h_orig, $ort, $resize_mode, $width, $height);
 
 		// Load source image
 		$image = imagecreatefromstring(file_get_contents($filename));
@@ -203,41 +270,14 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		// Resample
 		imagecopyresampled($image_p, $image, 0, 0, $x_src, $y_src, $w_dst, $h_dst, $w_src, $h_src);
 
+		// Flip if required
+		if ($needs_flip) {
+			//$image_p = imageflip($image_p, $needs_flip);	// FIXME
+		}
+
 		// Rotate if required
-		switch($ort)
-		{
-			case 1: // nothing
-				break;
-
-			case 2: // horizontal flip
-				//$image->flipImage($public,1);			// FIXME
-				break;
-
-			case 3: // 180 rotate left
-				$image_p = imagerotate($image_p, 180, 0);
-				break;
-
-			case 4: // vertical flip
-				//$image->flipImage($public,2);			// FIXME
-				break;
-
-			case 5: // vertical flip + 90 rotate right
-				//$image->flipImage($public, 2);		// FIXME
-				$image_p = imagerotate($image_p, 270, 0);
-				break;
-
-			case 6: // 90 rotate right
-				$image_p = imagerotate($image_p, 270, 0);
-				break;
-
-			case 7: // horizontal flip + 90 rotate right
-				//$image->flipImage($public,1);    		// FIXME
-				$image_p = imagerotate($image_p, 270, 0);
-				break;
-
-			case 8: // 90 rotate left
-				$image_p = imagerotate($image_p, 90, 0);
-				break;
+		if ($needs_rotation) {
+			$image_p = imagerotate($image_p, $needs_rotation, 0);
 		}
 
 		// Result

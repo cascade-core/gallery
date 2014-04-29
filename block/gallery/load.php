@@ -70,12 +70,35 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 			while (($file = readdir($d)) !== false) {
 				if ($file[0] != '.') {
 					$full_name = $directory.$file;
+					$fs_full_name = $path_prefix.$full_name;
 					if (preg_match('/(\.jpe?g|\.png|\.gif|\.tiff)$/i', $file)) {
+						// get metadata
+						$exif = exif_read_data($fs_full_name);
+						//debug_dump($exif);
+						if ($exif) {
+							$location = $this->exifToLocation($exif);
+							$width = $exif['COMPUTED']['Width'];
+							$height = $exif['COMPUTED']['Height'];
+							$orientation = $exif['Orientation'];
+						} else {
+							@ list($width, $height) = getimagesize($fs_full_name);
+							$orientation = 0;
+						}
+
+						list($tb_width, $tb_height) = B_gallery__photo__thumbnail::calculateThumbnailSize($width, $height, $orientation,
+								$gallery_config['resize_mode'], $gallery_config['thumbnail_size'], $gallery_config['thumbnail_size']);
+
+						// store item
 						$list[$file] = array(
 							'filename' => $file,
-							'path' => $path_prefix.$full_name,
+							'path' => $fs_full_name,
 							'url' => $url_prefix.$full_name,
 							'tb_url' => $url_prefix.$full_name.$url_thumbnail_ext,
+							'location' => $location,
+							'width' => $width,
+							'height' => $height,
+							'tb_width' => $tb_width,
+							'tb_height' => $tb_height,
 						);
 					} else {
 						$others[$file] = array(
@@ -89,6 +112,8 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 			closedir($d);
 			uksort($list, 'strcoll');
 			uksort($others, 'strcoll');
+
+			//debug_dump($list);
 
 			$this->out('title', $gallery_info['title']);
 			$this->out('info', $gallery_info);
@@ -116,6 +141,41 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 			return false;
 		}
 	}
+
+
+	private function exifToLocation($exif)
+	{
+		if (empty($exif)) {
+			return null;
+		}
+		$lon = $this->exifCoordToDecimal($exif["GPSLongitude"], $exif['GPSLongitudeRef']);
+		$lat = $this->exifCoordToDecimal($exif["GPSLatitude"], $exif['GPSLatitudeRef']);
+		$alt = $this->exifNumberToFloat($exif['GPSAltitude']);
+		return array($lon, $lat, $alt);
+	}
+
+
+	private function exifCoordToDecimal($coord, $ref)
+	{
+		$unit = 1;
+		$val = 0;
+		foreach ($coord as $c) {
+			$val += $this->exifNumberToFloat($c) / $unit;
+			$unit *= 60;
+		}
+		return ($ref == 'W' || $ref == 'S') ? - $val : $val;
+	}
+
+
+	private function exifNumberToFloat($str)
+	{
+		@ list($a, $b) = explode('/', $str);
+		if (!$b) {
+			return $a ? $a : null;
+		}
+		return (float) $a / (float) $b;
+	}
+
 };
 
 

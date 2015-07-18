@@ -39,26 +39,42 @@ class B_gallery__index__load extends \Cascade\Core\Block {
 
 		$path_prefix = $gallery_config['path_prefix'];
 		$url_prefix  = $gallery_config['url_prefix'];
+		$index_file  = $gallery_config['index_file'];
 		$list = array();
 
-		if (($d = opendir($path_prefix))) {
-			while (($file = readdir($d)) !== false) {
-				if ($directory == './') {
-					$full_name = $file;
-				} else {
-					$full_name = $directory.$file;
+		if ($index_file) {
+			// Read index file and scan only named subdirectories
+			foreach (file($index_file) as $file) {
+				$file = trim($file);
+				if ($file == '' || $file[0] == '#') {
+					continue;
 				}
-				if ($file[0] != '.' && is_dir($path_prefix.$full_name)) {
-					$info = B_gallery__gallery__load::getGalleryInfo($path_prefix.$full_name);
+				if (is_dir($path_prefix.$file)) {
+					$info = B_gallery__gallery__load::getGalleryInfo($path_prefix.$file);
 					if ($info !== false) {
 						$list[$file] = array_merge($info, array(
-								'url' => $url_prefix.$full_name,
+								'url' => $url_prefix.$file,
+							));
+					}
+				}
+			}
+		} else if (($d = opendir($path_prefix))) {
+			// Read directory contents and scan all subdirecotries
+			while (($file = readdir($d)) !== false) {
+				if ($file[0] != '.' && is_dir($path_prefix.$file)) {
+					$info = B_gallery__gallery__load::getGalleryInfo($path_prefix.$file);
+					if ($info !== false) {
+						$list[$file] = array_merge($info, array(
+								'url' => $url_prefix.$file,
 							));
 					}
 				}
 			}
 
 			closedir($d);
+		}
+
+		if (!empty($list)) {
 			uksort($list, 'strcoll');
 
 			$this->out('done', true);

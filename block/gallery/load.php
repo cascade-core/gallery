@@ -85,6 +85,7 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 							}
 							$orientation = isset($exif['Orientation']) ? $exif['Orientation'] : 0;
 						} else {
+							$location = null;
 							@ list($width, $height) = getimagesize($fs_full_name);
 							$orientation = 0;
 						}

@@ -245,7 +245,7 @@ class B_gallery__photo__thumbnail extends \Cascade\Core\Block
 		}
 		list($w_orig, $h_orig, $type) = $size_orig;
 
-		$exif = exif_read_data($filename);
+		$exif = @exif_read_data($filename);
 		$ort = @$exif['Orientation'];
 
 		list($w_dst, $h_dst, $w_src, $h_src, $x_src, $y_src, $needs_rotation, $needs_flip)

@@ -73,13 +73,17 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 					$fs_full_name = $path_prefix.$full_name;
 					if (preg_match('/(\.jpe?g|\.png|\.gif|\.tiff)$/i', $file)) {
 						// get metadata
-						$exif = exif_read_data($fs_full_name);
+						$exif = @ exif_read_data($fs_full_name);
 						//debug_dump($exif);
 						if ($exif) {
 							$location = $this->exifToLocation($exif);
-							$width = $exif['COMPUTED']['Width'];
-							$height = $exif['COMPUTED']['Height'];
-							$orientation = $exif['Orientation'];
+							if (isset($exif['COMPUTED']['Width']) && isset($exif['COMPUTED']['Height'])) {
+								$width = $exif['COMPUTED']['Width'];
+								$height = $exif['COMPUTED']['Height'];
+							} else {
+								@ list($width, $height) = getimagesize($fs_full_name);
+							}
+							$orientation = isset($exif['Orientation']) ? $exif['Orientation'] : 0;
 						} else {
 							@ list($width, $height) = getimagesize($fs_full_name);
 							$orientation = 0;
@@ -148,9 +152,21 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 		if (empty($exif)) {
 			return null;
 		}
-		$lon = $this->exifCoordToDecimal($exif["GPSLongitude"], $exif['GPSLongitudeRef']);
-		$lat = $this->exifCoordToDecimal($exif["GPSLatitude"], $exif['GPSLatitudeRef']);
-		$alt = $this->exifNumberToFloat($exif['GPSAltitude']);
+		if (isset($exif["GPSLongitude"]) && isset($exif['GPSLongitudeRef'])
+			&& isset($exif["GPSLatitude"]) && isset($exif['GPSLatitudeRef']))
+		{
+			$lon = $this->exifCoordToDecimal($exif["GPSLongitude"], $exif['GPSLongitudeRef']);
+			$lat = $this->exifCoordToDecimal($exif["GPSLatitude"], $exif['GPSLatitudeRef']);
+			if (isset($exif['GPSAltitude'])) {
+				$alt = $this->exifNumberToFloat($exif['GPSAltitude']);
+			} else {
+				$alt = null;
+			}
+		} else {
+			$lon = null;
+			$lat = null;
+			$alt = null;
+		}
 		return array($lon, $lat, $alt);
 	}
 

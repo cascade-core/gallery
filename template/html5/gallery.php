@@ -27,7 +27,7 @@ function TPL_html5__gallery__gallery($t, $id, $d, $so)
 
 	echo "<div class=\"gallery_listing\">\n";
 	foreach ($list as $item) {
-		echo	"\t<a class=\"item\" href=\"", htmlspecialchars($item['url']), "\">\n",
+		echo	"\t<a class=\"item\" href=\"", htmlspecialchars($item['url']), "\" rel=\"gallery_", sha1($id), "\">\n",
 			"\t\t<span class=\"photo\">",
 			"<img src=\"", htmlspecialchars($item['tb_url']), "\" alt=\"[thumbnail]\"";
 		if (isset($item['tb_width'])) {

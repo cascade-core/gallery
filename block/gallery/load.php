@@ -126,7 +126,7 @@ class B_gallery__gallery__load extends \Cascade\Core\Block {
 			$this->out('list', $list);
 			$this->out('others', $others);
 			if (!empty($gallery_config['dav_url_fmt'])) {
-				$this->out('dav_url', filename_format($gallery_config['dav_url_fmt'], array('directory' => str_replace('%2F', '/', urlencode($directory)))));
+				$this->out('dav_url', filename_format($gallery_config['dav_url_fmt'], array('directory' => str_replace('%2F', '/', rawurlencode($directory)))));
 			}
 			$this->out('done', true);
 		}
